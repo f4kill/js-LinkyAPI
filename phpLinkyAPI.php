@@ -8,7 +8,7 @@
 
 class Linky{
 
-    public $_version = '0.11';
+    public $_version = '0.12';
 
     public function getData_perhour($date)
     {
@@ -21,6 +21,8 @@ class Linky{
 
         $resource_id = 'urlCdcHeure';
         $result = $this->getData($resource_id, $startDate, $endDate);
+
+        if (!isset($result['graphe']['data'])) return false;
 
         //format this correctly:
         $returnData = array();
@@ -56,6 +58,8 @@ class Linky{
         $resource_id = 'urlCdcJour';
         $result = $this->getData($resource_id, $startDate, $endDate);
 
+        if (!isset($result['graphe']['data'])) return false;
+
         //format this correctly:
         $returnData = array();
 
@@ -80,6 +84,8 @@ class Linky{
     {
         $resource_id = 'urlCdcMois';
         $result = $this->getData($resource_id, $startDate, $endDate);
+
+        if (!isset($result['graphe']['data'])) return false;
 
         //format this correctly:
         $fromMonth = DateTime::createFromFormat('d/m/Y', $startDate);
@@ -107,6 +113,8 @@ class Linky{
     {
         $resource_id = 'urlCdcAn';
         $result = $this->getData($resource_id, null, null);
+
+        if (!isset($result['graphe']['data'])) return false;
 
         //format this correctly:
         $fromYear = new DateTime();
@@ -166,7 +174,7 @@ class Linky{
     //______________________calling functions
     protected function _request($method, $url, $postdata=null) //standard function handling all get/post request with curl | return string
     {
-    	if (!isset($this->_curlHdl))
+        if (!isset($this->_curlHdl))
         {
             $this->_curlHdl = curl_init();
             curl_setopt($this->_curlHdl, CURLOPT_COOKIEJAR, $this->_cookFile);
@@ -262,41 +270,41 @@ class Linky{
     protected $_cookFile = '';
 
     protected $_loginBaseUrl = 'https://espace-client-connexion.enedis.fr';
-	protected $_APIBaseUrl = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers';
-	protected $_APILoginUrl = '/auth/UI/Login';
-	protected $_APIHomeUrl = '/home';
-	protected $_APIDataUrl = '/suivi-de-consommation';
+    protected $_APIBaseUrl = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers';
+    protected $_APILoginUrl = '/auth/UI/Login';
+    protected $_APIHomeUrl = '/home';
+    protected $_APIDataUrl = '/suivi-de-consommation';
 
-	protected $_curlHdl = null;
+    protected $_curlHdl = null;
 
-	protected function auth()
+    protected function auth()
     {
-    	$postdata = http_build_query(
-		                            array(
-		                                'IDToken1' => $this->_login,
-		                                'IDToken2' => $this->_password,
-		                                'SunQueryParamsString' => base64_encode('realm=particuliers'),
-		                                'encoded' => 'true',
-		                                'gx_charset' => 'UTF-8'
-		                				)
-		            				);
+        $postdata = http_build_query(
+                                    array(
+                                        'IDToken1' => $this->_login,
+                                        'IDToken2' => $this->_password,
+                                        'SunQueryParamsString' => base64_encode('realm=particuliers'),
+                                        'encoded' => 'true',
+                                        'gx_charset' => 'UTF-8'
+                                        )
+                                    );
 
-    	$url = $this->_loginBaseUrl.$this->_APILoginUrl;
-    	$response = $this->_request('POST', $url, $postdata);
+        $url = $this->_loginBaseUrl.$this->_APILoginUrl;
+        $response = $this->_request('POST', $url, $postdata);
 
-    	//connected ?
-		preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $response, $matches);
-		$cookies = array();
-		foreach($matches[1] as $item)
-		{
-		    parse_str($item, $cookie);
-		    $cookies = array_merge($cookies, $cookie);
-		}
-		if (!array_key_exists('iPlanetDirectoryPro', $cookies))
-		{
-		    $this->error = 'Sorry, could not connect. Check your credentials.';
-		    return false;
-		}
+        //connected ?
+        preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $response, $matches);
+        $cookies = array();
+        foreach($matches[1] as $item)
+        {
+            parse_str($item, $cookie);
+            $cookies = array_merge($cookies, $cookie);
+        }
+        if (!array_key_exists('iPlanetDirectoryPro', $cookies))
+        {
+            $this->error = 'Sorry, could not connect. Check your credentials.';
+            return false;
+        }
 
         $this->_isAuth = true;
 
@@ -313,7 +321,7 @@ class Linky{
 
         if ($this->auth() == false)
         {
-        	return $this->error;
+            return $this->error;
         }
 
         if ($getAll)

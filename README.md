@@ -96,6 +96,9 @@ Vous pouvez bien sûr personnaliser le fichier, pour lire un autre json avec d'a
 
 ## Version history
 
+#### v 0.12 (2019-12-07)
+- Modified: getData_perhour(), getData_perday(), getData_permonth(), getData_peryear() now return false if data from Enedis are not correct (server down, etc).
+
 #### v0.1 (2018-02-25)
 - Première version !
 
