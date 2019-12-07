@@ -22,7 +22,10 @@ class Linky{
         $resource_id = 'urlCdcHeure';
         $result = $this->getData($resource_id, $startDate, $endDate);
 
-        if (!isset($result['graphe']['data'])) return false;
+        if (!isset($result['graphe']['data'])) {
+            $this->_data['hours'][$date] = null;
+            return false;
+        }
 
         //format this correctly:
         $returnData = array();
@@ -58,7 +61,10 @@ class Linky{
         $resource_id = 'urlCdcJour';
         $result = $this->getData($resource_id, $startDate, $endDate);
 
-        if (!isset($result['graphe']['data'])) return false;
+        if (!isset($result['graphe']['data'])) {
+            $this->_data['days'] = null;
+            return false;
+        }
 
         //format this correctly:
         $returnData = array();
@@ -85,7 +91,10 @@ class Linky{
         $resource_id = 'urlCdcMois';
         $result = $this->getData($resource_id, $startDate, $endDate);
 
-        if (!isset($result['graphe']['data'])) return false;
+        if (!isset($result['graphe']['data'])) {
+            $this->_data['months'] = null;
+            return false;
+        }
 
         //format this correctly:
         $fromMonth = DateTime::createFromFormat('d/m/Y', $startDate);
@@ -114,7 +123,10 @@ class Linky{
         $resource_id = 'urlCdcAn';
         $result = $this->getData($resource_id, null, null);
 
-        if (!isset($result['graphe']['data'])) return false;
+        if (!isset($result['graphe']['data'])) {
+            $this->_data['years'] = null;
+            return false;
+        }
 
         //format this correctly:
         $fromYear = new DateTime();
