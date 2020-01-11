@@ -119,6 +119,12 @@ class Linky
         return true;
     }
 
+    /**
+     * @param \DateTime $date
+     *
+     * @return array|null
+     * @throws LinkyException
+     */
     public function getHourlyData(\DateTime $date)
     {
         // From date - 2 days to date + 1 day...
@@ -187,6 +193,13 @@ class Linky
         return $output;
     }
 
+    /**
+     * @param \DateTime $startDate
+     * @param \DateTime $endDate
+     *
+     * @return array|null
+     * @throws LinkyException
+     */
     public function getMonthlyData(\DateTime $startDate, \DateTime $endDate)
     {
         $result = $this->requestData('urlCdcMois', $startDate, $endDate);
@@ -210,6 +223,10 @@ class Linky
         return $output;
     }
 
+    /**
+     * @return array|null
+     * @throws LinkyException
+     */
     public function getYearlyData()
     {
         $result = $this->requestData('urlCdcAn', null, null);
