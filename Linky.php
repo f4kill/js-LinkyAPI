@@ -32,30 +32,26 @@ namespace Linky;
  */
 class Linky
 {
-    protected $version = '0.12';
+    const VERSION = '0.12';
+
+    const BASEURL_LOGIN       = 'https://espace-client-connexion.enedis.fr';
+    const BASEURL_API         = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers';
+    const LOGINURL_LOGIN_PATH = '/auth/UI/Login';
+    const APIURL_HOME_PATH    = '/home';
+    const APIURL_DATA_PATH    = '/suivi-de-consommation';
 
     /** @var EnedisCredentials */
     protected $credentials = null;
-
-    /** @var bool */
-    protected $isAuthenticated = false;
-
-    protected $_cookFile = '';
-
-    /** @var string */
-    protected $_loginBaseUrl = 'https://espace-client-connexion.enedis.fr';
-    /** @var string */
-    protected $_APIBaseUrl = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers';
-    /** @var string */
-    protected $_APILoginUrl = '/auth/UI/Login';
-    /** @var string */
-    protected $_APIHomeUrl = '/home';
-    /** @var string */
-    protected $_APIDataUrl = '/suivi-de-consommation';
-
-    protected $requestHandler = null;
     /** @var bool */
     protected $withUnits;
+
+    /** @var bool Internal authentication status */
+    protected $isAuthenticated = false;
+
+    /** @var resource|null Internal request handler */
+    protected $requestHandler       = null;
+    /** @var string Internal cookie storage for requests */
+    protected $requestCookieStorage = '';
 
     /**
      * Linky constructor.
@@ -78,7 +74,7 @@ class Linky
      */
     public function getVersion(): string
     {
-        return $this->version;
+        return self::VERSION;
     }
 
     /**
@@ -101,7 +97,7 @@ class Linky
             'gx_charset' => 'UTF-8',
         );
 
-        $url = $this->_loginBaseUrl.$this->_APILoginUrl;
+        $url = self::BASEURL_LOGIN.self::LOGINURL_LOGIN_PATH;
         $response = $this->request('POST', $url, $postdata);
 
         // Checking status
@@ -289,7 +285,7 @@ class Linky
     {
         $p_p_id = 'lincspartdisplaycdc_WAR_lincspartcdcportlet';
 
-        $url = $this->_APIBaseUrl.$this->_APIDataUrl;
+        $url = self::BASEURL_API.self::APIURL_DATA_PATH;
         $url .= '?p_p_id='.$p_p_id;
         $url .= '&p_p_lifecycle=2';
         $url .= '&p_p_mode=view';
@@ -386,8 +382,8 @@ class Linky
     {
         $this->requestHandler = curl_init();
 
-        curl_setopt($this->requestHandler, CURLOPT_COOKIEJAR, $this->_cookFile);
-        curl_setopt($this->requestHandler, CURLOPT_COOKIEFILE, $this->_cookFile);
+        curl_setopt($this->requestHandler, CURLOPT_COOKIEJAR, $this->requestCookieStorage);
+        curl_setopt($this->requestHandler, CURLOPT_COOKIEFILE, $this->requestCookieStorage);
 
         curl_setopt($this->requestHandler, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($this->requestHandler, CURLOPT_SSL_VERIFYPEER, false);
