@@ -1,0 +1,12 @@
+# System, IDE, ...
+.DS_Store
+.idea
+.bundle
+
+# Composer
+composer.phar
+vendor/*
+
+# Git
+!.gitkeep
+.git

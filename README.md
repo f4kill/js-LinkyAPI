@@ -16,7 +16,7 @@ Voici une API simple d'utilisation pour récupérer vos données de consommation
 
 J'utilise personnellement cette API avec une tâche planifiée (cron) toutes les 8h pour enregistrer l'ensemble des données dans un fichier json. Ce qui me permet de conserver mes données, et de les afficher avec Plotly par exemple, pour faire des corrélations avec le chauffage ([Qivivo](https://github.com/KiboOst/php-simpleQivivoAPI/tree/master/DailyOverview)), les relevés Netatmo, etc.
 
-Voici le script php qui log les données Linky dans un fichier json : [linkyCron.php](linkyCron.php)
+Voici le script php qui log les données Linky dans un fichier json : [cron.php](cron.php)
 
 ## Pré-requis
 - Un compteur Linky !
@@ -24,16 +24,35 @@ Voici le script php qui log les données Linky dans un fichier json : [linkyCron
 - Un serveur php avec accès à internet (mutualisé sur hébergement, NAS Synology, etc.)
 
 ## Utilisation
-- Téléchargez le fichier phpLinkyAPI.php sur votre serveur..
+- Téléchargez le fichier Linky.php sur votre serveur..
 - Créez un script php avec vos identifiants/mot de passe Enedis et un include de l'API.
 
 #### Connection
 
 ```php
-require("phpLinkyAPI.php"); //Linky custom API
+require_once './Linky.php';
+require_once './EnedisCredentials.php';
+require_once './LinkyException.php';
 
-$_Linky = new Linky($enedis_user, $enedis_pass, false);
-if (isset($_Linky->error)) echo '__ERROR__: ', $_Linky->error, "<br>";
+use Linky\Linky;
+use Linky\EnedisCredentials;
+use Linky\LinkyException;
+
+$enedisCredentials = new EnedisCredentials('mylogin', 'mypass');
+
+try {
+    $linky = new Linky($enedisCredentials);
+
+    //$data = $linky->getAll();
+    //$data = $linky->getHourlyData(new DateTime('2020-01-05'));
+    $data = $linky->getDailyData(new DateTime('2020-01-01'), new DateTime('2020-01-11'));
+
+    var_dump($data);
+} catch (LinkyException $e) {
+    echo $e->getMessage().PHP_EOL;
+
+    exit;
+}
 ```
 ---
 
@@ -50,32 +69,32 @@ A noter que les données du Linky ne sont disponibles que le lendemain. La date 
 //Si nous sommes le 25 Février 2018:
 
 //Consommation par demi-heure:
-$data = $_Linky->getData_perhour('24/02/2018');
+$data = $linky->getHourlyData(new DateTime('2018-02-24'));
 echo "<pre>getData_perhour:<br>".json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
 
 //Vous pouvez aussi le faire automatiquement:
 $today = new DateTime('NOW', new DateTimeZone('Europe/Paris'));
 $yesterday = $today->sub(new DateInterval('P1D'));
-$data = $_Linky->getData_perhour($yesterday->format('d/m/Y'));
+$data = $linky->getHourlyData($yesterday->format('d/m/Y'));
 echo "<pre>getData_perhour:<br>".json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
 
 //Consommation par jour:
 //Utilisez toujours des dates d'un mois glissant, sinon les données renvoyées peuvent être décalées, surtout pour le mois courant.
-$data = $_Linky->getData_perday('01/01/2018', '31/01/2018');
+$data = $linky->getDailyData(new DateTime('2018-01-01'), new DateTime('2018-01-31'));
 echo "<pre>getData_perday:<br>".json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
 
 //Consommation par mois:
 //Même si les données n'existent pas, il faut donner une année glissante:
-$data = $_Linky->getData_permonth('01/02/2017', '24/02/2018');
+$data = $linky->getMonthlyData(new DateTime('2017-02-01'), new DateTime('2018-02-24'));
 echo "<pre>getData_permonth:<br>".json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
 
 //Consommation par année:
-$data = $_Linky->getData_peryear();
+$data = $linky->getYearlyData();
 echo "<pre>getData_peryear:<br>".json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
 
 //Vous pouvez aussi directement appeller cette fonction pour récupérer l'ensemble des données jusqu'à hier:
-$_Linky->getAll();
-echo "<pre>getAll:<br>".json_encode($_Linky->_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
+$linky->getAll();
+echo "<pre>getAll:<br>".json_encode($linky->data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)."</pre><br>";
 ```
 ---
 
@@ -95,6 +114,9 @@ Ensuite, ouvrez le simplement dans un navigateur !
 Vous pouvez bien sûr personnaliser le fichier, pour lire un autre json avec d'autres données et dessiner des corrélations.
 
 ## Version history
+
+#### forked master (2020-01-11)
+- Cleanup of php code: upgraded to php7.3, PSR code style, exceptions for errors, ...
 
 #### v 0.12 (2019-12-07)
 - Modified: getData_perhour(), getData_perday(), getData_permonth(), getData_peryear() now return false if data from Enedis are not correct (server down, etc).
