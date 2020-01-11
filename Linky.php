@@ -40,6 +40,9 @@ class Linky
     const APIURL_HOME_PATH    = '/home';
     const APIURL_DATA_PATH    = '/suivi-de-consommation';
 
+    const REQUEST_METHOD_POST = 'POST';
+    const REQUEST_METHOD_GET  = 'GET';
+
     /** @var EnedisCredentials */
     protected $credentials = null;
     /** @var bool */
@@ -57,7 +60,7 @@ class Linky
      * Linky constructor.
      *
      * @param EnedisCredentials $credentials
-     * @param bool              $withUnits   Pass true to get values with their unit (ie. kW), otherwise raw values are provided
+     * @param bool              $withUnits   Pass true to get values as string with their unit (ie. kWh), otherwise raw float values are provided
      *
      * @throws LinkyException
      */
@@ -98,7 +101,7 @@ class Linky
         );
 
         $url = self::BASEURL_LOGIN.self::LOGINURL_LOGIN_PATH;
-        $response = $this->request('POST', $url, $postdata);
+        $response = $this->request(self::REQUEST_METHOD_POST, $url, $postdata);
 
         // Checking status
         preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $response, $matches);
@@ -114,7 +117,7 @@ class Linky
         $this->isAuthenticated = true;
 
         $url = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers/accueil';
-        $response = $this->request('GET', $url);
+        $response = $this->request(self::REQUEST_METHOD_GET, $url);
 
         return true;
     }
@@ -319,7 +322,7 @@ class Linky
             );
         }
 
-        $response = $this->request('GET', $url, $postdata);
+        $response = $this->request(self::REQUEST_METHOD_GET, $url, $postdata);
         $jsonArray = json_decode($response, true);
 
         if ($jsonArray['etat']['valeur'] == 'erreur') {
@@ -362,7 +365,7 @@ class Linky
         //echo 'url: ', $url, "<br>";
         curl_setopt($this->requestHandler, CURLOPT_URL, $url);
 
-        if ($method === 'POST') {
+        if ($method === self::REQUEST_METHOD_POST) {
             curl_setopt($this->requestHandler, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($this->requestHandler, CURLOPT_POST, true);
         } else {
@@ -370,7 +373,7 @@ class Linky
         }
 
         if (isset($postdata)) {
-            curl_setopt($this->requestHandler, CURLOPT_CUSTOMREQUEST, 'POST');
+            curl_setopt($this->requestHandler, CURLOPT_CUSTOMREQUEST, self::REQUEST_METHOD_POST);
             curl_setopt($this->requestHandler, CURLOPT_POSTFIELDS, http_build_query($postdata));
         }
 
