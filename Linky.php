@@ -34,11 +34,18 @@ class Linky
 {
     const VERSION = '0.12';
 
+    const DATASET_HOURLY  = 'hours';
+    const DATASET_DAILY   = 'days';
+    const DATASET_MONTHLY = 'months';
+    const DATASET_YEARLY  = 'years';
+
     const BASEURL_LOGIN       = 'https://espace-client-connexion.enedis.fr';
     const BASEURL_API         = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers';
     const LOGINURL_LOGIN_PATH = '/auth/UI/Login';
     const APIURL_HOME_PATH    = '/home';
     const APIURL_DATA_PATH    = '/suivi-de-consommation';
+
+    const TIMEZONE = 'Europe/Paris';
 
     const REQUEST_METHOD_POST = 'POST';
     const REQUEST_METHOD_GET  = 'GET';
@@ -147,10 +154,10 @@ class Linky
 
         $data = $result['graphe']['data'];
         $end = count($data);
-        for ($i = $end - 1; $i >= $end - 48; $i--) {
+        for ($i = $end - 1; $i >= $end - (2*24); $i--) {
             $value = $data[$i]['valeur'];
 
-            $output[$currentTime->format('Y-m-d H:i')] = $this->formatValue($value);
+            $output[$date->format('Y-m-d').' '.$currentTime->format('H:i')] = $this->formatValue($value);
 
             $currentTime->modify('-30 min');
         }
@@ -262,33 +269,32 @@ class Linky
     public function getAll(): array
     {
         $data = array(
-            'hours' => null,
-            'days' => null,
-            'months' => null,
-            'years' => null,
+            self::DATASET_HOURLY  => null,
+            self::DATASET_DAILY   => null,
+            self::DATASET_MONTHLY => null,
+            self::DATASET_YEARLY  => null,
         );
 
-        $timezone = 'Europe/Paris';
-        $today = new \DateTime('NOW', new \DateTimeZone($timezone));
+        $today = new \DateTime('NOW', new \DateTimeZone(self::TIMEZONE));
         $yesterday = clone $today;
         $yesterday->sub(new \DateInterval('P1D')); // Enedis' last data are for yesterday
 
-        // Geting hour data for yesterday
-        $data['hours'] = $this->getHourlyData($yesterday);
+        // Getting hour data for yesterday
+        $data[self::DATASET_HOURLY] = $this->getHourlyData($yesterday);
 
         // Getting daily data for the last 30 days
         $monthAgo = clone $yesterday;
         $monthAgo->sub(new \DateInterval('P30D'));
-        $data['days'] = $this->getDailyData($monthAgo, $today);
+        $data[self::DATASET_DAILY] = $this->getDailyData($monthAgo, $yesterday);
 
         // Getting monthly data for the last 365 days
         $yearAgo = clone $yesterday;
         $yearAgo->sub(new \DateInterval('P1Y'));
         $yearAgo->setDate($yearAgo->format('Y'), $yearAgo->format('m'), '01');
-        $data['months'] = $this->getMonthlyData($yearAgo, $yesterday);
+        $data[self::DATASET_MONTHLY] = $this->getMonthlyData($yearAgo, $yesterday);
 
         // Getting yearly data
-        $data['years'] = $this->getYearlyData();
+        $data[self::DATASET_YEARLY] = $this->getYearlyData();
 
         return $data;
     }
