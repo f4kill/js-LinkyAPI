@@ -16,7 +16,11 @@ Voici une API simple d'utilisation pour récupérer vos données de consommation
 
 J'utilise personnellement cette API avec une tâche planifiée (cron) toutes les 8h pour enregistrer l'ensemble des données dans un fichier json. Ce qui me permet de conserver mes données, et de les afficher avec Plotly par exemple, pour faire des corrélations avec le chauffage ([Qivivo](https://github.com/KiboOst/php-simpleQivivoAPI/tree/master/DailyOverview)), les relevés Netatmo, etc.
 
-Voici le script php qui log les données Linky dans un fichier json : [cron.php](cron.php)
+Un script php permet de récupérer toutes les données depuis le début : [all.php](all.php).
+
+Un script php permet de mettre à jour les données : [cron.php](cron.php), à lancer quotidiennement.
+
+Les donnés sont stockées dans un fichier linky-data.json.
 
 ## Pré-requis
 - Un compteur Linky !
@@ -100,23 +104,16 @@ echo "<pre>getAll:<br>".json_encode($linky->data, JSON_UNESCAPED_SLASHES | JSON_
 
 #### VISUALISATION<br />
 
-<p align="center">
-  <img src="/assets/linkyVisualJson.jpg" width="400">
-</p>
+Le fichier display.html ouvert dans un navigateur permet de charger un fichier linky-data.json et affiche les graphs.
+Un clic sur chaque barre affiche le détail.
 
-Pour visualiser les données récoltées dans le fichier json (voir script au dessus en intro), voici un fichier html/javascript.
-Dans le screen ci-dessus, je n'avais évidemment pas le Linky en 2015 / 2016 / 2017. J'ai simplement récupéré les infos annuelles depuis mon compte EDF, pour les ajouter à la main dans le json :smirk:
-
-Téléchargez le fichier LinkyLog.html, mettez le sur votre serveur, changez éventuellement la ligne var linkyLogPath = "cache/linkyLog.json" pour pointer sur votre fichier json.
-
-Ensuite, ouvrez le simplement dans un navigateur !
-
-Vous pouvez bien sûr personnaliser le fichier, pour lire un autre json avec d'autres données et dessiner des corrélations.
+Un ```npm install``` (ou ```yarn install```) est nécessaire pour récupérer les bibliothèques javascript nécessaires.
 
 ## Version history
 
 #### forked master (2020-01-11)
 - Cleanup of php code: upgraded to php7.3, PSR code style, exceptions for errors, ...
+- Rewrote the visualization to enable comparison of data
 
 #### v 0.12 (2019-12-07)
 - Modified: getData_perhour(), getData_perday(), getData_permonth(), getData_peryear() now return false if data from Enedis are not correct (server down, etc).

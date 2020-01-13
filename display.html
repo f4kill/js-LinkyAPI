@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<title></title>
+
+	<script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="node_modules/c3/c3.min.css" />
+	<script type="text/javascript" src="node_modules/d3/dist/d3.min.js"></script>
+	<script type="text/javascript" src="node_modules/c3/c3.min.js"></script>
+
+	<style type="text/css">
+		.graph {
+			height: 320px;
+			width: 100%;
+		}
+	</style>
+</head>
+<body>
+	<input type="file" name="file" id="file">
+
+	<div class="graph" id="graph-years"></div>
+	<div class="graph" id="graph-months"></div>
+	<div class="graph" id="graph-days"></div>
+	<div class="graph" id="graph-hours"></div>
+
+	<script type="text/javascript">
+		document.getElementById('file').addEventListener('change', (e) => {
+			handleFileSelect(e);
+		});
+
+		function handleFileSelect(evt) {
+			const files = evt.target.files;
+
+			if (files.length > 1) {
+				alert(`Plusieurs fichiers ont été chargés : un seul fichier json peut être chargé`);
+				return;
+			}
+
+			const file = files[0];
+
+			if (!/\.json$/.test(file.name)) {
+				alert(`Fichier ${file.name} invalide : seul un fichier json peut être chargé`);
+				return;
+			}
+
+			console.log('Loading file ' + file.name);
+
+			const reader = new FileReader();
+
+			// Closure to capture the file information.
+			reader.onerror = (e) => {
+				alert('Error while reading file: ' + reader.error);
+			};
+			reader.onload = (e) => {
+				try {
+					console.log('Parsing file ' + file.name);
+					const data = JSON.parse(e.target.result);
+
+					window.data = data;
+
+					showGraphs();
+				} catch (error) {
+					if (error instanceof SyntaxError) {
+						alert('Error while trying to parse json: ' + error);
+					} else {
+						throw error;
+					}
+				}
+			};
+
+			reader.readAsText(file);
+
+			// Resetting the input field for a new/next import
+			document.getElementById('file').value = '';
+		}
+
+		// window.colors = ["hsl(216, 60%, 46.875%)", "hsl(72, 60%, 46.875%)", "hsl(18, 60%, 46.875%)", "hsl(47.988, 60%, 46.875%)", "hsl(270, 60%, 46.875%)", "hsl(0, 60%, 46.875%)", "hsl(216, 100%, 25%)", "hsl(72, 100%, 25%)", "hsl(18, 100%, 25%)", "hsl(47.988, 100%, 25%)"];
+
+		function showGraphs() {
+			window.active = {
+				'years': [],
+				'months': [],
+				'days': [],
+				// 'hours': [],
+			};
+
+			showYears();
+			showMonths();
+			showDays();
+			showHours();
+		}
+
+		function showYears() {
+			if (typeof window.yearsChart !== 'undefined') {
+				window.yearsChart.destroy();
+				delete window.yearsChart;
+			}
+
+			const x = Object.keys(data.years);
+			x.unshift('x');
+			const d = Object.values(data.years);
+			d.unshift('d');
+
+			window.yearsChart = c3.generate({
+				bindto: '#graph-years',
+				data: {
+					type: 'bar',
+					x: 'x',
+					columns: [
+						x,
+						d,
+					],
+					names: {
+						d: '',
+					},
+					onclick: function (d, element) {
+						// const $element = $(element);
+
+						const index = window.active.years.indexOf(d.x);
+						if (index > -1) {
+							// disabling
+							window.active.years.splice(index, 1);
+
+							// $element.css('fill', $element.data('fill'));
+						} else {
+							// enabling
+							window.active.years.push(d.x);
+
+							// $element.data('fill', $element.css('fill'));
+							// $element.css('fill', 'rgb(255, 0, 0)');
+						}
+
+						showMonths();
+					}
+				},
+			});
+		}
+
+		function showMonths() {
+			if (typeof window.monthsChart !== 'undefined') {
+				window.monthsChart.destroy();
+				delete window.monthsChart;
+			}
+
+			if (window.active.years.length === 0) {
+				return;
+			}
+
+			const columns = [];
+			const names = {};
+			const keys = {};
+
+			const x = [];
+			columns.push(x);
+			for (let i = 1; i <= 12; i++) {
+				x.push(i);
+			}
+			x.unshift('x');
+
+			window.active.years.forEach((year) => {
+				let d = [];
+				let k = [];
+
+				for (let i = 1; i <= 12; i++) {
+					const key = year+'-'+pad(i, 2, '0');
+					k.push(key);
+
+					let value = window.data.months[key];
+					if (typeof value === 'undefined') {
+						value = null;
+					}
+					d.push(value);
+				}
+
+				columns.push(d);
+				d.unshift('d'+year);
+
+				names['d'+year] = year;
+				keys['d'+year] = k;
+			});
+
+			window.monthsChart = c3.generate({
+				bindto: '#graph-months',
+				data: {
+					type: 'bar',
+					x: 'x',
+					columns: columns,
+					names: names,
+					onclick: function (d, element) {
+						// console.log(d);
+						// console.log(element);
+
+						// const $element = $(element);
+
+						const index = window.active.months.indexOf(keys[d.id][d.index]);
+						if (index > -1) {
+							// disabling
+							window.active.months.splice(index, 1);
+
+							// $element.css('fill', $element.data('fill'));
+						} else {
+							// enabling
+							window.active.months.push(keys[d.id][d.index]);
+
+							// $element.data('fill', $element.css('fill'));
+							// $element.css('fill', 'rgb(255, 0, 0)');
+						}
+
+						showDays();
+					}
+				},
+			});
+		}
+
+		function showDays() {
+			if (typeof window.daysChart !== 'undefined') {
+				window.daysChart.destroy();
+				delete delete window.daysChart;
+			}
+
+			if (window.active.months.length === 0) {
+				return;
+			}
+
+			const columns = [];
+			const names = {};
+			const keys = {};
+
+			const x = [];
+			columns.push(x);
+			for (let i = 1; i <= 31; i++) {
+				x.push(i);
+			}
+			x.unshift('x');
+
+			window.active.months.forEach((month) => {
+				let d = [];
+				let k = [];
+
+				for (let i = 1; i <= 31; i++) {
+					const key = month+'-'+pad(i, 2, '0');
+					k.push(key);
+
+					let value = window.data.days[key];
+					if (typeof value === 'undefined') {
+						value = null;
+					}
+					d.push(value);
+				}
+
+				columns.push(d);
+				d.unshift('d'+month);
+
+				names['d'+month] = month;
+				keys['d'+month] = k;
+			});
+
+			window.daysChart = c3.generate({
+				bindto: '#graph-days',
+				data: {
+					type: 'bar',
+					x: 'x',
+					columns: columns,
+					names: names,
+					onclick: function (d, element) {
+						// console.log(d);
+						// console.log(element);
+
+						// const $element = $(element);
+
+						const index = window.active.days.indexOf(keys[d.id][d.index]);
+						if (index > -1) {
+							// disabling
+							window.active.days.splice(index, 1);
+
+							// $element.css('fill', $element.data('fill'));
+						} else {
+							// enabling
+							window.active.days.push(keys[d.id][d.index]);
+
+							// $element.data('fill', $element.css('fill'));
+							// $element.css('fill', 'rgb(255, 0, 0)');
+						}
+
+						showHours();
+					}
+				},
+			});
+		}
+
+		function showHours() {
+			if (typeof window.hoursChart !== 'undefined') {
+				window.hoursChart.destroy();
+				delete window.hoursChart;
+			}
+
+			if (window.active.days.length === 0) {
+				return;
+			}
+
+			const columns = [];
+			const names = {};
+			const keys = {};
+
+			const x = [];
+			columns.push(x);
+			for (let i = 0; i <= 23; i++) {
+				x.push(pad(i, 2, '0')+':'+'00');
+				x.push(pad(i, 2, '0')+':'+'30');
+			}
+			x.unshift('x');
+
+			window.active.days.forEach((day) => {
+				let d = [];
+				let k = [];
+
+				for (let i = 0; i <= 23; i++) {
+					const key = day+' ';
+
+					const key00 = key+pad(i, 2, '0')+':'+'00';
+					k.push(key00);
+
+					let value00 = window.data.hours[key00];
+					if (typeof value00 === 'undefined') {
+						value00 = null;
+					}
+					d.push(value00);
+
+					const key30 = key+pad(i, 2, '0')+':'+'30';
+					k.push(key00);
+
+					let value30 = window.data.hours[key30];
+					if (typeof value30 === 'undefined') {
+						value30 = null;
+					}
+					d.push(value30);
+				}
+
+				columns.push(d);
+				d.unshift('d'+day);
+
+				names['d'+day] = day;
+				keys['d'+day] = k;
+			});
+
+			window.hoursChart = c3.generate({
+				bindto: '#graph-hours',
+				data: {
+					type: 'bar',
+					x: 'x',
+					columns: columns,
+					names: names,
+					onclick: function (d, element) {
+						// console.log(d);
+						// console.log(element);
+					}
+				},
+				axis: {
+					x: {
+						type: 'category',
+						tick: {
+							rotate: -90,
+							multiline: false,
+						}
+					}
+				},
+			});
+		}
+
+		function pad(n, width, z) {
+			z = z || '0';
+			n = n + '';
+			return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+		}
+	</script>
+</body>
+</html>
