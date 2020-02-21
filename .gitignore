@@ -10,3 +10,6 @@ vendor/*
 # Git
 !.gitkeep
 .git
+
+# NodeJs
+/node_modules
