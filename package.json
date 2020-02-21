@@ -26,5 +26,10 @@
   "bugs": {
     "url": "https://github.com/f4kill/js-LinkyAPI/issues"
   },
-  "homepage": "https://github.com/f4kill/js-LinkyAPI#readme"
+  "homepage": "https://github.com/f4kill/js-LinkyAPI#readme",
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.20.1"
+  }
 }
