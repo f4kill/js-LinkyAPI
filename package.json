@@ -2,5 +2,29 @@
   "dependencies": {
     "c3": "^0.7.12",
     "jquery": "^3.4.1"
-  }
+  },
+  "name": "js-linkyapi",
+  "description": "<img align=\"right\" src=\"/assets/linky.png\" width=\"250\">",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f4kill/js-LinkyAPI.git"
+  },
+  "keywords": [
+    "linky",
+    "enedis",
+    "suivre-ma-consommation",
+    "nodejs",
+    "express"
+  ],
+  "author": "Aymeric Bianco Pelle",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/f4kill/js-LinkyAPI/issues"
+  },
+  "homepage": "https://github.com/f4kill/js-LinkyAPI#readme"
 }
